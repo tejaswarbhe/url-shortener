@@ -27,22 +27,27 @@ let mongoose = null;
 let isConnected = false;
 
 const connectDB = async () => {
-  if (isConnected && mongoose) return mongoose;
+  if (isConnected && mongoose && mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
   
   try {
     mongoose = require('mongoose');
     
     // Close existing connection if any
     if (mongoose.connection.readyState === 1) {
-      return mongoose;
+      await mongoose.connection.close();
     }
     
     const conn = await mongoose.connect(process.env.MONGO_URI, {
       bufferCommands: false,
-      bufferMaxEntries: 0,
       maxPoolSize: 1,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      // Serverless-friendly options
+      autoIndex: false,
+      autoCreate: false,
     });
     
     isConnected = true;
