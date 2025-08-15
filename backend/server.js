@@ -93,7 +93,18 @@ app.get('/api/minimal-test', (req, res) => {
   res.json({
     message: 'Minimal test endpoint working!',
     timestamp: new Date().toISOString(),
-    status: 'success'
+    status: 'success',
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// Database status endpoint
+app.get('/api/db-status', (req, res) => {
+  res.json({
+    message: 'Database status check',
+    timestamp: new Date().toISOString(),
+    database: isConnected ? 'Connected' : 'Disconnected',
+    mongoUri: process.env.MONGO_URI ? 'Configured' : 'Not configured'
   });
 });
 
