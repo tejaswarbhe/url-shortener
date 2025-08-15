@@ -57,16 +57,29 @@ const connectDB = async () => {
 
 // Database connection middleware
 app.use(async (req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path} - Starting request`);
+  
   try {
     if (!process.env.MONGO_URI) {
-      return res.status(500).json({ error: 'Database connection string not configured' });
+      console.error('❌ MONGO_URI environment variable not set');
+      return res.status(500).json({ 
+        error: 'Database connection string not configured',
+        message: 'MONGO_URI environment variable is missing'
+      });
     }
     
+    console.log('🔌 Attempting database connection...');
     await connectDB();
+    console.log('✅ Database connection successful');
     next();
   } catch (error) {
-    console.error('Database connection failed:', error);
-    res.status(500).json({ error: 'Database connection failed' });
+    console.error('❌ Database connection failed:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      error: 'Database connection failed', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
@@ -89,17 +102,64 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Import routes
-const urlRoutes = require('./routes/urls.js');
-const indexRoutes = require('./routes/index.js');
-const authRoutes = require('./routes/auth.js');
-const linkRoutes = require('./routes/links.js');
+// Import routes with comprehensive error handling
+let urlRoutes, indexRoutes, authRoutes, linkRoutes;
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/links', linkRoutes);
-app.use('/api', urlRoutes);
-app.use('/', indexRoutes);
+try {
+  console.log('Loading route modules...');
+  urlRoutes = require('./routes/urls.js');
+  console.log('✓ urls.js loaded');
+  indexRoutes = require('./routes/index.js');
+  console.log('✓ index.js loaded');
+  authRoutes = require('./routes/auth.js');
+  console.log('✓ auth.js loaded');
+  linkRoutes = require('./routes/links.js');
+  console.log('✓ links.js loaded');
+  console.log('All route modules loaded successfully');
+} catch (error) {
+  console.error('❌ Error loading route modules:', error);
+  console.error('Stack trace:', error.stack);
+  
+  // Create fallback routes if modules fail to load
+  const fallbackRouter = require('express').Router();
+  fallbackRouter.get('*', (req, res) => {
+    res.status(500).json({ 
+      error: 'Route modules failed to load', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  });
+  urlRoutes = fallbackRouter;
+  indexRoutes = fallbackRouter;
+  authRoutes = fallbackRouter;
+  linkRoutes = fallbackRouter;
+}
+
+// Mount routes with error handling
+try {
+  console.log('Mounting routes...');
+  app.use('/api/auth', authRoutes);
+  console.log('✓ /api/auth mounted');
+  app.use('/api/links', linkRoutes);
+  console.log('✓ /api/links mounted');
+  app.use('/api', urlRoutes);
+  console.log('✓ /api mounted');
+  app.use('/', indexRoutes);
+  console.log('✓ / mounted');
+  console.log('All routes mounted successfully');
+} catch (error) {
+  console.error('❌ Error mounting routes:', error);
+  console.error('Stack trace:', error.stack);
+  
+  // Fallback error route
+  app.use('*', (req, res) => {
+    res.status(500).json({ 
+      error: 'Routes failed to mount', 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  });
+}
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -123,6 +183,22 @@ if (process.env.NODE_ENV !== 'production') {
     console.log(`Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
   });
 }
+
+// Global error handlers to catch unhandled exceptions
+process.on('uncaughtException', (error) => {
+  console.error('🚨 Uncaught Exception:', error);
+  console.error('Stack trace:', error.stack);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🚨 Unhandled Rejection at:', promise);
+  console.error('Reason:', reason);
+  if (reason instanceof Error) {
+    console.error('Stack trace:', reason.stack);
+  }
+  process.exit(1);
+});
 
 // Export for Vercel
 module.exports = app; 
