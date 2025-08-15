@@ -147,25 +147,15 @@ try {
 // Mount routes with error handling
 try {
   console.log('Mounting routes...');
-  
-  // Test route mounting individually
-  console.log('Testing route mounting...');
-  
   app.use('/api/auth', authRoutes);
   console.log('✓ /api/auth mounted');
-  
   app.use('/api/links', linkRoutes);
   console.log('✓ /api/links mounted');
-  
   app.use('/api', urlRoutes);
   console.log('✓ /api mounted');
-  
   app.use('/', indexRoutes);
   console.log('✓ / mounted');
-  
   console.log('All routes mounted successfully');
-  console.log('Server setup complete - ready to handle requests');
-  
 } catch (error) {
   console.error('❌ Error mounting routes:', error);
   console.error('Stack trace:', error.stack);
