@@ -86,17 +86,7 @@ npm run dev
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:5000
 
-## 🔧 Environment Variables
 
-### Backend (.env)
-```env
-MONGO_URI=mongodb://localhost:27017/url-shortener
-JWT_SECRET=your-super-secret-jwt-key
-PORT=5000
-NODE_ENV=development
-FRONTEND_URL=http://localhost:5173
-BASE_URL=http://localhost:5000
-```
 
 ## 📱 API Endpoints
 
