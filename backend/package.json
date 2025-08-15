@@ -24,7 +24,6 @@
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.18.0",
     "mongoose": "^8.17.1",
-    "nanoid": "^5.1.5",
     "valid-url": "^1.0.9"
   }
 }

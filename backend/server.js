@@ -83,6 +83,15 @@ app.use(async (req, res, next) => {
   }
 });
 
+// Very simple test endpoint (no database, no routes, no complex logic)
+app.get('/api/minimal-test', (req, res) => {
+  res.json({
+    message: 'Minimal test endpoint working!',
+    timestamp: new Date().toISOString(),
+    status: 'success'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
